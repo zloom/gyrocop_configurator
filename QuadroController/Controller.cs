@@ -30,7 +30,7 @@ namespace QuadroController
 
         private void ConnectClick(object sender, EventArgs e)
         {
-            lst = new Listener("COM3", 9600);
+            lst = new Listener("COM5", 9600);
             lst.OnPackageReceived = data =>
             {
                
@@ -58,7 +58,7 @@ namespace QuadroController
 
         private void StartClick(object sender, EventArgs e)
         {
-            lst.Write(57);
+            lst.Write(50);
         }
     }
 }

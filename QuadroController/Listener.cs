@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO.Ports;
 using System.Linq;
 using System.Text;
@@ -30,6 +31,7 @@ namespace QuadroController
             _port.Open();
             _port.DataReceived += DataReceived;
             _packageBuffer = string.Empty;
+
         }
 
         public void StartAsync()
@@ -51,27 +53,28 @@ namespace QuadroController
 
         private void ReadBuffer() 
         {
-            if (!_packageBuffer.StartsWith(_packetSeparator))
+            if (!_packageBuffer.StartsWith(_packetSeparator)&&_packageBuffer.IndexOf(_packetSeparator)!=-1)
             {
-                var packageStart = _packetSeparator.IndexOf(_packetSeparator);
+                var packageStart =_packageBuffer.IndexOf(_packetSeparator);
                 _packageBuffer = _packageBuffer.Remove(0, packageStart);
             }
 
             var nextSeparatorIndex = _packageBuffer.IndexOf(_packetSeparator, 1);
             if (nextSeparatorIndex > 1)
             {
-                var package = _packageBuffer.Substring(1, nextSeparatorIndex);
+                var package = _packageBuffer.Substring(1, nextSeparatorIndex-1);
                 _packageBuffer = _packageBuffer.Remove(0, nextSeparatorIndex);
 
-               // OnPackageReceived?.Invoke(Newtonsoft.Json.JsonConvert.DeserializeObject<float[][]>(package));
+               OnPackageReceived?.Invoke(Newtonsoft.Json.JsonConvert.DeserializeObject<float[][]>(package));
             }
         }
 
         private void DataReceived(object sender, SerialDataReceivedEventArgs e)
         {
             var line = _port.ReadLine().Replace("\r", "");
+            Trace.TraceInformation(line);
             _packageBuffer += line;
-            ReadBuffer();
+           ReadBuffer();
         }
     }
 }
