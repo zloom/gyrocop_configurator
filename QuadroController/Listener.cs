@@ -9,14 +9,14 @@ namespace QuadroController
 {
     public class Listener
     {
+        const string _packetSeparator = "$";
         private readonly string _portName;
         private readonly int _speed;
+        private string _packageBuffer;
         private SerialPort _port;
         private Task _task;
 
-        public Action<short[]> OnDataReceived { private get; set; }
-
-        public Action<string> OnDataReceivedString { private get; set; }
+        public Action<float[][]> OnPackageReceived { private get; set; }
 
         public Listener(string portName, int speed)
         {
@@ -29,6 +29,7 @@ namespace QuadroController
             _port = new SerialPort(_portName, _speed);
             _port.Open();
             _port.DataReceived += DataReceived;
+            _packageBuffer = string.Empty;
         }
 
         public void StartAsync()
@@ -43,15 +44,34 @@ namespace QuadroController
             _port.Dispose();
         }
 
-        public void Write(byte[] input)
+        public void Write(byte input)
         {
-            _port.Write(new[] { input[0] }, 0, 1);
+            _port.Write(new[] { input }, 0, 1);
+        }
+
+        private void ReadBuffer() 
+        {
+            if (!_packageBuffer.StartsWith(_packetSeparator))
+            {
+                var packageStart = _packetSeparator.IndexOf(_packetSeparator);
+                _packageBuffer = _packageBuffer.Remove(0, packageStart);
+            }
+
+            var nextSeparatorIndex = _packageBuffer.IndexOf(_packetSeparator, 1);
+            if (nextSeparatorIndex > 1)
+            {
+                var package = _packageBuffer.Substring(1, nextSeparatorIndex);
+                _packageBuffer = _packageBuffer.Remove(0, nextSeparatorIndex);
+
+               // OnPackageReceived?.Invoke(Newtonsoft.Json.JsonConvert.DeserializeObject<float[][]>(package));
+            }
         }
 
         private void DataReceived(object sender, SerialDataReceivedEventArgs e)
         {
             var line = _port.ReadLine().Replace("\r", "");
-            OnDataReceivedString?.Invoke(line);
+            _packageBuffer += line;
+            ReadBuffer();
         }
     }
 }

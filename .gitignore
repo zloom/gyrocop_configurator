@@ -1,8 +1,7 @@
 ﻿################################################################################
 # This .gitignore file was automatically created by Microsoft(R) Visual Studio.
 ################################################################################
-
-/.vs/SerialConnector/v16/Server/sqlite3
-/QuadroController/bin/Debug
-/QuadroController/obj/Debug
-/.vs/SerialConnector/v16
+.vs
+bin
+obj
+packages
